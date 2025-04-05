@@ -43,10 +43,10 @@ headGroup.add(rightEye);
 
 // Sourcils
 function createBrow(x) {
-  const browGeometry = new THREE.BoxGeometry(0.25, 0.05, 0.05);
+  const browGeometry = new THREE.BoxGeometry(0.35, 0.05, 0.05);
   const browMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
   const brow = new THREE.Mesh(browGeometry, browMaterial);
-  brow.position.set(x, 0.45, 0);
+  brow.position.set(x, 0.40, 0);
   return brow;
 }
 
@@ -81,7 +81,8 @@ let targetState = {
   eyeScale: new THREE.Vector3(1, 1, 1),
   leftBrowRotZ: 0,
   rightBrowRotZ: 0,
-  headRotation: new THREE.Euler(0, 0, 0)
+  headRotation: new THREE.Euler(0, 0, 0),
+  headPosition: new THREE.Vector3(0, 0, 0) // Nouvelle position de tête
 };
 
 const expressions = [
@@ -91,7 +92,8 @@ const expressions = [
     targetState.eyeScale.set(1, 1, 1);
     targetState.leftBrowRotZ = 0.2;
     targetState.rightBrowRotZ = -0.2;
-    targetState.headRotation.set(0.05, 0.1, 0);
+    targetState.headRotation.set(0.1, 0.2, 0);  // Rotation de la tête vers la droite
+    targetState.headPosition.set(0.05, -0.05, 0); // Légère translation vers la droite et vers le bas
   },
   () => { // Triste
     targetState.mouthRotationZ = Math.PI;
@@ -99,7 +101,8 @@ const expressions = [
     targetState.eyeScale.set(1, 1, 1);
     targetState.leftBrowRotZ = -0.3;
     targetState.rightBrowRotZ = 0.3;
-    targetState.headRotation.set(-0.1, -0.1, 0.05);
+    targetState.headRotation.set(-0.1, -0.2, 0);  // Rotation de la tête vers la gauche
+    targetState.headPosition.set(-0.05, 0.05, 0); // Légère translation vers la gauche et vers le haut
   },
   () => { // Surpris
     targetState.mouthRotationZ = 0;
@@ -107,7 +110,8 @@ const expressions = [
     targetState.eyeScale.set(1.2, 1.2, 1.2);
     targetState.leftBrowRotZ = 0;
     targetState.rightBrowRotZ = 0;
-    targetState.headRotation.set(0.15, 0, 0);
+    targetState.headRotation.set(0.2, 0, 0);  // Tête se tourne vers le bas
+    targetState.headPosition.set(0, 0.05, 0); // Légère translation vers le haut
   },
   () => { // Neutre
     targetState.mouthRotationZ = 0;
@@ -115,7 +119,8 @@ const expressions = [
     targetState.eyeScale.set(1, 1, 1);
     targetState.leftBrowRotZ = 0;
     targetState.rightBrowRotZ = 0;
-    targetState.headRotation.set(0, 0, 0);
+    targetState.headRotation.set(0, 0, 0);  // Position neutre de la tête
+    targetState.headPosition.set(0, 0, 0); // Position neutre (pas de déplacement)
   }
 ];
 
@@ -132,14 +137,14 @@ function animate(time) {
     blinkTimer = time;
   }
 
-  if (time - expressionTimer > 5000) {
+  if (time - expressionTimer > 3000) {
     expressions[expressionIndex % expressions.length]();
     expressionIndex++;
     expressionTimer = time;
   }
 
   // Animation plus fluide (transition lente)
-  const smoothing = 0.04; // Plus bas = plus lent et plus doux
+  const smoothing = 0.07; // Plus bas = plus lent et plus doux
 
   mouth.rotation.z += (targetState.mouthRotationZ - mouth.rotation.z) * smoothing;
   mouth.scale.lerp(targetState.mouthScale, smoothing);
@@ -148,9 +153,13 @@ function animate(time) {
   leftBrow.rotation.z += (targetState.leftBrowRotZ - leftBrow.rotation.z) * smoothing;
   rightBrow.rotation.z += (targetState.rightBrowRotZ - rightBrow.rotation.z) * smoothing;
 
+  // Rotation de la tête sur plusieurs axes
   headGroup.rotation.x += (targetState.headRotation.x - headGroup.rotation.x) * smoothing;
   headGroup.rotation.y += (targetState.headRotation.y - headGroup.rotation.y) * smoothing;
   headGroup.rotation.z += (targetState.headRotation.z - headGroup.rotation.z) * smoothing;
+
+  // Déplacement léger de la tête
+  headGroup.position.lerp(targetState.headPosition, smoothing);
 
   renderer.render(scene, camera);
 }
